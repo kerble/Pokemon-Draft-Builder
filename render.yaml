@@ -1,0 +1,12 @@
+# Render Blueprint — deploy with "New > Blueprint" and point it at this repo,
+# or just create a Web Service and let Render auto-detect (this file is
+# optional). Free plan spins down after ~15 min idle; first request after
+# that takes ~30-50s to wake.
+services:
+  - type: web
+    name: winconfinder
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/draft-pool

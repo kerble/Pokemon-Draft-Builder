@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draft Buildbot — Win-Con Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="rail">
+    <div class="rail-brand">
+      <span class="rail-brand-mark">DB</span>
+      <span class="rail-brand-name">Draft&nbsp;Buildbot</span>
+    </div>
+    <ol class="rail-steps" id="railSteps">
+      <li data-step="0"><span class="rail-num">01</span><span class="rail-label">Opponent draft</span></li>
+      <li data-step="1"><span class="rail-num">02</span><span class="rail-label">Your candidate</span></li>
+      <li data-step="2"><span class="rail-num">03</span><span class="rail-label">Move pool</span></li>
+      <li data-step="3"><span class="rail-num">04</span><span class="rail-label">EV spread</span></li>
+      <li data-step="4"><span class="rail-num">05</span><span class="rail-label">Items</span></li>
+      <li data-step="5"><span class="rail-num">06</span><span class="rail-label">Opponent threats</span></li>
+    </ol>
+    <div class="rail-footer">
+      <span class="rail-footer-dot"></span>
+      <span>engine: @smogon/calc</span>
+    </div>
+  </aside>
+
+  <main class="stage">
+
+    <nav class="wizard-nav wizard-nav-top">
+      <button type="button" id="btnBackTop" class="btn btn-ghost">Back</button>
+      <button type="button" id="btnNextTop" class="btn btn-primary">Next</button>
+    </nav>
+
+    <!-- STEP 0 — Opponent draft -->
+    <section class="panel" data-panel="0">
+      <header class="panel-head">
+        <p class="eyebrow">Step 01</p>
+        <h1>Who's the opponent drafted?</h1>
+        <p class="sub">Add every mon on the enemy team. This is the full gauntlet your candidate set gets checked against.</p>
+      </header>
+
+      <div class="paste-box">
+        <label class="field-label" for="oppPaste">Paste from your draft sheet</label>
+        <textarea id="oppPaste" class="paste-input" rows="4" placeholder="Empoleon&#10;Roserade&#10;Heracross (T)&#10;Ambipom (T)"></textarea>
+        <div class="paste-row">
+          <button type="button" id="btnPasteAdd" class="btn btn-ghost btn-small">Add these to draft</button>
+          <span class="paste-hint">One per line. "(T)" for Tera is ignored automatically.</span>
+        </div>
+        <p class="paste-warning" id="pasteWarning" hidden></p>
+      </div>
+
+      <div class="chip-row" id="oppChips"></div>
+      <div class="picker">
+        <input type="text" id="oppSearch" class="search-input" placeholder="Or search draft pool…" autocomplete="off">
+        <div class="option-grid" id="oppOptions"></div>
+      </div>
+    </section>
+
+    <!-- STEP 1 — Candidate -->
+    <section class="panel" data-panel="1" hidden>
+      <header class="panel-head">
+        <p class="eyebrow">Step 02</p>
+        <h1>Which of your mons are we building?</h1>
+        <p class="sub">Pick one Pokémon from your draft. Everything downstream — moves, EVs, items — is scoped to this mon.</p>
+      </header>
+      <input type="text" id="candSearch" class="search-input" placeholder="Search draft pool…" autocomplete="off">
+      <div class="option-grid single" id="candOptions"></div>
+    </section>
+
+    <!-- STEP 2 — Move pool -->
+    <section class="panel" data-panel="2" hidden>
+      <header class="panel-head">
+        <p class="eyebrow">Step 03</p>
+        <h1>Which moves are in play?</h1>
+        <p class="sub">Nothing's checked by default — turn on only what you actually want tested. Star a move to lock it into every generated set.</p>
+      </header>
+      <p class="hint hint-top" id="statHint"></p>
+      <div class="chip-row" id="moveChips"></div>
+      <input type="text" id="moveSearch" class="search-input" placeholder="Search moves…" autocomplete="off">
+      <div class="move-list" id="moveList"></div>
+    </section>
+
+    <!-- STEP 3 — EVs -->
+    <section class="panel" data-panel="3" hidden>
+      <header class="panel-head">
+        <p class="eyebrow">Step 04</p>
+        <h1>EV assumptions</h1>
+        <p class="sub">Lock any stat you already know (like a speed-creep number). Everything else gets explored at 0 or 252 — this tool finds the best moves for a role, not a fully-optimized spread.</p>
+      </header>
+      <div class="ev-grid" id="evGrid"></div>
+    </section>
+
+    <!-- STEP 4 — Items -->
+    <section class="panel" data-panel="4" hidden>
+      <header class="panel-head">
+        <p class="eyebrow">Step 05</p>
+        <h1>Items to test</h1>
+        <p class="sub">Search and pick 3-4 — every item multiplies the number of sets generated.</p>
+      </header>
+      <input type="text" id="itemSearch" class="search-input" placeholder="Search items…" autocomplete="off">
+      <div class="option-grid" id="itemOptions"></div>
+      <div class="chip-row" id="itemChips"></div>
+    </section>
+
+    <!-- STEP 5 — Opponent threats -->
+    <section class="panel" data-panel="5" hidden>
+      <header class="panel-head">
+        <p class="eyebrow">Step 06</p>
+        <h1>Assumed opponent threats</h1>
+        <p class="sub">The evaluator assumes worst-case counterplay: every damaging move any known set runs, paired with whichever of that mon's real set spreads is worst for you. Scan for a mon whose pool is missing a move you'd want covered — add it to <code>gen9_filtered.js</code> and re-run.</p>
+      </header>
+      <div class="opp-set-list" id="oppSetList"></div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="panel results-panel" data-panel="results" hidden>
+      <header class="panel-head">
+        <p class="eyebrow">Report</p>
+        <h1 id="resultsTitle">Win-con breakdown</h1>
+        <p class="sub">Shaded by KO quality — a sweep can't trade damage every turn. The <b>+N</b> badge is how many boosts that KO needs; the <b>pt</b> badge is the mon's draft cost, and the set score weights pricier mons and taxes every extra boost. Ordered heaviest-first. Every calc uses the max damage roll; chip and hazards aren't modelled.</p>
+      </header>
+      <div class="best-set" id="bestSet"></div>
+      <div class="result-summary" id="resultsSummary"></div>
+      <div class="legend">
+        <span class="legend-item"><i class="swatch q-clean"></i>clean — no damage taken</span>
+        <span class="legend-item"><i class="swatch q-favorable"></i>favorable — one small hit</span>
+        <span class="legend-item"><i class="swatch q-risky"></i>risky — trades real damage</span>
+        <span class="legend-item"><i class="swatch q-loss"></i>can't win</span>
+      </div>
+      <div class="stage-toggle" id="stageToggle" hidden></div>
+      <div class="results-grid" id="resultsGrid"></div>
+      <div class="alternatives" id="alternatives"></div>
+    </section>
+
+    <nav class="wizard-nav">
+      <button type="button" id="btnBack" class="btn btn-ghost">Back</button>
+      <button type="button" id="btnNext" class="btn btn-primary">Next</button>
+    </nav>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

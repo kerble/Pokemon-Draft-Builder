@@ -1,0 +1,10 @@
+node_modules/
+*.log
+.DS_Store
+scratchpad/
+_*.mjs
+_*.js
+
+# .cache/*.json (Showdown dex data) is intentionally committed — names.js
+# reads pokedex.json synchronously at boot, so the server needs it present.
+# Refresh it with `npm run refresh-data`.

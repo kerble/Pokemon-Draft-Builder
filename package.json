@@ -1,0 +1,23 @@
+{
+  "name": "draft-buildbot",
+  "version": "1.0.0",
+  "description": "Draft-league win-con finder — @smogon/calc-backed 1v1 sweep evaluator",
+  "main": "server.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "refresh-data": "node refreshCache.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@smogon/calc": "^0.11.0",
+    "csv-parse": "^7.0.2",
+    "express": "^5.2.1"
+  }
+}
