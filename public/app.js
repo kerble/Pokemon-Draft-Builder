@@ -104,6 +104,7 @@ function wireStaticEventListeners() {
   document.getElementById('btnBack').addEventListener('click', onBack);
   document.getElementById('btnNextTop').addEventListener('click', onNext);
   document.getElementById('btnBackTop').addEventListener('click', onBack);
+  document.getElementById('btnNewReport').addEventListener('click', newReport);
 }
 
 // Items are fetched lazily, the first time step 4 is reached — keeps a
@@ -717,6 +718,21 @@ function onBack() {
   state.step -= 1;
   showPanel(state.step);
   renderRail();
+  updateNavButtons();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// From the report, jump back to the opponent-draft step with every input
+// still in state. The user re-Nexts through (changing anything they want)
+// to regenerate against the same or a tweaked draft.
+function newReport() {
+  state.step = 0;
+  showPanel(0);
+  renderRail();
+  document.querySelectorAll('.wizard-nav').forEach(el => { el.style.display = ''; });
+  renderOppOptions();
+  renderOppChips();
+  renderMoveChips();
   updateNavButtons();
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
